@@ -1,0 +1,17 @@
+#!/bin/bash -l
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=5
+#SBATCH --mem=50G
+#SBATCH --output=info_scores.out
+#SBATCH --job-name="scores"
+#SBATCH -p short
+
+module load bcftools/1.15
+
+
+#Pulling the scores from the vcfs to look at distribution and assign a cutoff for filtering
+
+for F in $(cat vcfpaths.txt) ; do
+bcftools query -f '%INFO/INFO_SCORE\n' -o ${F/.vcf/"_scores.txt"} $F
+done
