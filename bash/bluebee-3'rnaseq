@@ -1,0 +1,77 @@
+#!/bin/bash -l
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --mem=20G
+#SBATCH --output=BBduk.out
+#SBATCH --job-name="BBduk"
+#SBATCH -p batch
+
+cd /rhome/keelyb/bigdata/3prime
+
+module load BBTools
+
+bbduk.sh in=./fastq/PoolA/1034-6_S13_R1_001.fastq.gz out=./trimmed/1034-6_trimmed.fastq ref=/rhome/keelyb/shared/TRIMMING_ADAPTERS/PE_all.fa k=13 ktrim=r useshortkmers=t mink=5 qtrim=r trimq=10 minlength=20
+
+
+#!/bin/bash -l
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --mem=20G
+#SBATCH --output=stargenome.out
+#SBATCH --job-name="star"
+#SBATCH -p batch
+
+
+
+cd /rhome/keelyb/bigdata/3prime
+
+module load STAR
+
+STAR --runThreadN 8 --runMode genomeGenerate --genomeDir ./genome/ --genomeFastaFiles ./Mguttatus_256_v2.0.fa --sjdbGTFfile ./Mguttatus_256_v2.0.gene_exons.gff3 --sjdbGTFtagExonParentTranscript Parent \
+--sjdbOverhang 74
+
+
+
+#!/bin/bash -l
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --mem=20G
+#SBATCH --output=star.out
+#SBATCH --job-name="star"
+#SBATCH -p batch
+
+
+
+cd /rhome/keelyb/bigdata/3prime
+
+module load STAR
+
+STAR --runThreadN 8 --genomeDir ./genome/  --readFilesIn ./trimmed/1034-6_trimmed.fastq \
+--outFilterType BySJout --outFilterMultimapNmax 20 --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 \
+--outFilterMismatchNmax 999 --outFilterMismatchNoverLmax 0.1 --alignIntronMin 20 \
+--alignIntronMax 1000000 --alignMatesGapMax 1000000 --outSAMattributes NH HI NM MD \
+--outSAMtype BAM SortedByCoordinate --outFileNamePrefix ./mapped/1034-6
+
+
+
+
+#!/bin/bash -l
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --mem=20G
+#SBATCH --output=htseq.out
+#SBATCH --job-name="htseq"
+#SBATCH -p batch
+
+
+
+cd /rhome/keelyb/bigdata/3prime/
+
+source activate Bluebee
+
+
+htseq-count -m intersection-nonempty -s yes -f bam -r pos -t exon -i Parent ./mapped/1133-1Aligned.sortedByCoord.out.bam ./fastq/Mguttatus_256_v2.0.gene_exons.gff3 > ./readcounts/1133-1_read_counts.txt
