@@ -1,0 +1,23 @@
+#!/bin/bash -l
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=5
+#SBATCH --mem=50G
+#SBATCH --array=1-4
+#SBATCH --output=stitch_HS232_chr1H_%a.out
+#SBATCH --job-name="Stitch"
+#SBATCH -p koeniglab
+
+
+
+# software dependencies
+# stitch 1.6.6
+
+
+CHROM=`echo chr1H`
+POP=`echo HS232`
+
+mkdir ${POP}/${CHROM}/
+mkdir ${POP}/${CHROM}/${SLURM_ARRAY_TASK_ID}
+
+../STITCH/STITCH.R --chr=$CHROM --bamlist=bamlist_${POP}.txt --posfile=pos_${CHROM}_${SLURM_ARRAY_TASK_ID}.txt --outputdir=./${POP}/${CHROM}/${SLURM_ARRAY_TASK_ID} --K=36 --nGen=29 --nCores=5
